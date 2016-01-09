@@ -31,6 +31,7 @@ import time
 from btsbots.trade_pusher import TradePusher
 from btsbots.config import asset_info
 import math
+from prettytable import PrettyTable
 # from pprint import pprint
 
 
@@ -39,7 +40,8 @@ class TradeBots(object):
         self.cycle = 15  # run bots every 60 seconds
         self.isSim = False
         self.data = {
-            "tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {}, "bill": 0.0}
+            "tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {},
+            "bill": 0.0, "profile": {}}
         self.account = config["account"]
         cli_wallet = config["cli_wallet"]
         self.password = cli_wallet["wallet_unlock"]
@@ -74,6 +76,7 @@ class TradeBots(object):
                     self.check_order()
             except Exception as e:
                 print("task bots error:", e)
+            self.display_order()
             yield from asyncio.sleep(self.cycle)
 
     def get_trade_price(self, _tradeinfo):
@@ -227,6 +230,44 @@ class TradeBots(object):
         for base in _tradeinfo:
             for quote in _tradeinfo[base]["sell_for"]:
                 self._sim_trade(base, quote, _tradeinfo)
+
+    def display_add_order(self, _t, _base, _quote):
+        _market = "%s/%s" % (_quote, _base)
+        _tradeinfo = self.data["tradeinfo"]
+        a_base = _tradeinfo[_base]["alias"]
+        a_quote = _tradeinfo[_quote]["alias"]
+        bid_volume = bid_spread = bid_price = None
+        ask_volume = ask_spread = ask_price = None
+        real_price = self.data["rate_usd"][a_base][0]/self.data[
+            "rate_usd"][a_quote][0]
+        if _tradeinfo[_quote]["sell_for"][_base]["orders"]:
+            _id = list(_tradeinfo[_quote]["sell_for"][_base]["orders"])[0]
+            _order = _tradeinfo[_quote]["sell_for"][_base]["orders"][_id]
+            bid_price, bid_volume = _order
+            bid_volume = bid_volume * bid_price
+            bid_price = 1/bid_price
+            bid_spread = real_price/bid_price - 1.0
+        if _tradeinfo[_base]["sell_for"][_quote]["orders"]:
+            _id = list(_tradeinfo[_base]["sell_for"][_quote]["orders"])[0]
+            _order = _tradeinfo[_base]["sell_for"][_quote]["orders"][_id]
+            ask_price, ask_volume = _order
+            ask_spread = ask_price/real_price - 1.0
+        _row = [
+            _market, bid_volume, bid_spread, bid_price,
+            real_price, ask_price, ask_spread, ask_volume]
+        for _index in range(1, len(_row)):
+            _row[_index] = format(_row[_index], ".4g")
+        _t.add_row(_row)
+
+    def display_order(self):
+        t = PrettyTable([
+            "market", "bid volume", "bid spread", "bid price",
+            "real price", "ask price", "ask spread", "ask volume"])
+        t.align = 'r'
+        t.border = True
+        for _base, _quote in self.data["profile"]["market"]:
+            self.display_add_order(t, _base, _quote)
+        print(t.get_string())
 
     def check_order(self):
         _tradeinfo = self.data["tradeinfo"]
