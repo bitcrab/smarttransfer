@@ -1,0 +1,16 @@
+{
+    "account": "init0",
+    "cli_wallet": {
+        "host" : "localhost",
+        "port" : 8092,
+        "rpc_user" : "",
+        "rpc_passwd" : "",
+        "wallet_unlock" : ""
+    },
+    "addition_spread": 0.005,
+    "threshold": 0.01,
+    "price_factor": {
+        "CNY": 1.0,
+        "USD": 1.05
+    }
+}

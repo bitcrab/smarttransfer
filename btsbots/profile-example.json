@@ -1,0 +1,21 @@
+{
+    "quota_in_usd": 100,
+    "market": [
+        ["BTS", "TCNY"],
+        ["BTS", "USD"]
+        ],
+    "asset": {
+        "BTS": {
+            "weight": 3.0,
+            "spread": [0.007, 0.12]
+        },
+        "TCNY": {
+            "weight": 1.0,
+            "spread": [0.005, 0.08]
+        },
+        "USD": {
+            "weight": 1.0,
+            "spread": [0.005, 0.1]
+        }
+    }
+}
